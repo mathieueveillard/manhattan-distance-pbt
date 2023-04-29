@@ -1,15 +1,99 @@
 import fc from "fast-check";
-import linear from ".";
+import { equalCoordinates, dimension1Distance, manhattanDistance } from ".";
 
-it("The slope between two points should be constant", function () {
-  const property = fc.assert(
-    fc.property(fc.record({ x1: fc.nat(), x2: fc.nat() }), ({ x1, x2 }): boolean => {
-      fc.pre(x1 !== x2);
-      const y1 = linear(x1);
-      const y2 = linear(x2);
-      const slope = (y2 - y1) / (x2 - x1);
-      console.log({ x1, x2, y1, y2, slope });
-      return slope === 0.5;
-    })
-  );
+describe("One dimension distance", () => {
+  test("Separation", () => {
+    fc.assert(
+      fc.property(fc.nat(), (a) => {
+        return dimension1Distance(a, a) === 0;
+      })
+    );
+  });
+
+  test("Separation (reciprocity)", () => {
+    fc.assert(
+      fc.property(fc.nat({ max: 10 }), fc.nat({ max: 10 }), (a, b) => {
+        fc.pre(dimension1Distance(a, b) === 0);
+        return a === b;
+      })
+    );
+  });
+
+  test("Symetry", () => {
+    fc.assert(
+      fc.property(fc.nat(), fc.nat(), (a, b) => {
+        return dimension1Distance(a, b) === dimension1Distance(b, a);
+      })
+    );
+  });
+
+  test("Triangular inequality", () => {
+    fc.assert(
+      fc.property(fc.nat(), fc.nat(), fc.nat(), (a, b, c) => {
+        return dimension1Distance(a, c) <= dimension1Distance(a, b) + dimension1Distance(b, c);
+      })
+    );
+  });
+});
+
+describe("Manhattan distance", () => {
+  test("Separation", () => {
+    fc.assert(
+      fc.property(fc.record({ x: fc.nat(), y: fc.nat() }), (a) => {
+        return manhattanDistance(a, a) === 0;
+      })
+    );
+  });
+
+  test("Separation (reciprocity)", () => {
+    fc.assert(
+      fc.property(
+        fc.record({ x: fc.nat({ max: 6 }), y: fc.nat({ max: 6 }) }),
+        fc.record({ x: fc.nat({ max: 6 }), y: fc.nat({ max: 6 }) }),
+        (a, b) => {
+          fc.pre(manhattanDistance(a, b) === 0);
+          return equalCoordinates(a, b);
+        }
+      )
+    );
+  });
+
+  test("Symetry", () => {
+    fc.assert(
+      fc.property(
+        fc.record({ x: fc.nat({ max: 6 }), y: fc.nat({ max: 6 }) }),
+        fc.record({ x: fc.nat({ max: 6 }), y: fc.nat({ max: 6 }) }),
+        (a, b) => {
+          return manhattanDistance(a, b) === manhattanDistance(b, a);
+        }
+      )
+    );
+  });
+
+  test("Triangular inequality", () => {
+    fc.assert(
+      fc.property(
+        fc.record({ x: fc.nat({ max: 6 }), y: fc.nat({ max: 6 }) }),
+        fc.record({ x: fc.nat({ max: 6 }), y: fc.nat({ max: 6 }) }),
+        fc.record({ x: fc.nat({ max: 6 }), y: fc.nat({ max: 6 }) }),
+        (a, b, c) => {
+          return manhattanDistance(a, c) <= manhattanDistance(a, b) + manhattanDistance(b, c);
+        }
+      )
+    );
+  });
+
+  test("Triangular equality (caracteristic of the Manhattan distance)", () => {
+    fc.assert(
+      fc.property(
+        fc.record({ x: fc.nat({ max: 6 }), y: fc.nat({ max: 6 }) }),
+        fc.record({ x: fc.nat({ max: 6 }), y: fc.nat({ max: 6 }) }),
+        fc.record({ x: fc.nat({ max: 6 }), y: fc.nat({ max: 6 }) }),
+        (a, b, c) => {
+          fc.pre(b.x >= a.x && b.x <= c.x && b.y >= a.y && b.y <= c.y);
+          return manhattanDistance(a, c) === manhattanDistance(a, b) + manhattanDistance(b, c);
+        }
+      )
+    );
+  });
 });
