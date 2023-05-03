@@ -1,11 +1,20 @@
+export const dimension1Distance = (a: number, b: number): number => Math.abs(a - b);
+
 type Coordinates = {
   x: number;
   y: number;
 };
 
-export const equalCoordinates = (a: Coordinates, b: Coordinates): boolean => a.x === b.x && a.y === b.y;
+const projection =
+  (dimension: keyof Coordinates) =>
+  (coordinates: Coordinates): number =>
+    coordinates[dimension];
 
-export const dimension1Distance = (a: number, b: number): number => Math.abs(a - b);
+export const x = projection("x");
+
+export const y = projection("y");
+
+export const equalCoordinates = (a: Coordinates, b: Coordinates): boolean => x(a) === x(b) && y(a) === y(b);
 
 export const manhattanDistance = (a: Coordinates, b: Coordinates): number =>
-  dimension1Distance(a.x, b.x) + dimension1Distance(a.y, b.y);
+  dimension1Distance(x(a), x(b)) + dimension1Distance(y(a), y(b));
